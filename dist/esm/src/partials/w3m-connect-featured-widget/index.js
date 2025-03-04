@@ -1,0 +1,57 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+import { LitElement, html } from 'lit';
+import { property } from 'lit/decorators.js';
+import { ifDefined } from 'lit/directives/if-defined.js';
+import { ApiController, AssetUtil, ConnectorController } from '@reown/appkit-core';
+import { customElement } from '@reown/appkit-ui';
+import { WalletUtil } from '../../utils/WalletUtil.js';
+const COINBASE_WALLET_ID = 'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa';
+let W3mConnectFeaturedWidget = class W3mConnectFeaturedWidget extends LitElement {
+    constructor() {
+        super(...arguments);
+        this.unsubscribe = [];
+        this.tabIdx = undefined;
+    }
+    disconnectedCallback() {
+        this.unsubscribe.forEach(unsubscribe => unsubscribe());
+    }
+    render() {
+        const { featured } = ApiController.state;
+        const featuredWithoutCoinbase = featured.filter(wallet => wallet.id !== COINBASE_WALLET_ID);
+        if (!featuredWithoutCoinbase.length) {
+            this.style.cssText = `display: none`;
+            return null;
+        }
+        const wallets = WalletUtil.filterOutDuplicateWallets(featuredWithoutCoinbase);
+        return html `
+      <wui-flex flexDirection="column" gap="xs">
+        ${wallets.map(wallet => html `
+            <wui-list-wallet
+              data-testid=${`wallet-selector-featured-${wallet.id}`}
+              imageSrc=${ifDefined(AssetUtil.getWalletImage(wallet))}
+              name=${wallet.name ?? 'Unknown'}
+              @click=${() => this.onConnectWallet(wallet)}
+              tabIdx=${ifDefined(this.tabIdx)}
+            >
+            </wui-list-wallet>
+          `)}
+      </wui-flex>
+    `;
+    }
+    onConnectWallet(wallet) {
+        ConnectorController.selectWalletConnector(wallet);
+    }
+};
+__decorate([
+    property()
+], W3mConnectFeaturedWidget.prototype, "tabIdx", void 0);
+W3mConnectFeaturedWidget = __decorate([
+    customElement('w3m-connect-featured-widget')
+], W3mConnectFeaturedWidget);
+export { W3mConnectFeaturedWidget };
+//# sourceMappingURL=index.js.map
